@@ -15,6 +15,8 @@ use Illuminate\Support\Facades\Facade;
 
 class Application extends \Illuminate\Foundation\Application
 {
+    public $server;
+
     protected $bootedInRequest = false;
 
     protected $providersInRequest = [];

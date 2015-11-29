@@ -11,7 +11,10 @@ class LaravelFlyServer
     protected $kernelClass;
     protected $kernel;
 
-    public function __construct($laravelDir, $options, $kernelClass='\App\Http\Kernel')
+    public $taskApp;
+    protected $taskObjs=[];
+
+    public function __construct($laravelDir, $options, $kernelClass = '\App\Http\Kernel')
     {
 
         $this->laravelDir = realpath($laravelDir);
@@ -23,7 +26,21 @@ class LaravelFlyServer
 
         $this->swoole_http_server = $server = new \swoole_http_server($options['listen_ip'], $options['listen_port']);
 
-        $this->kernelClass=$kernelClass;
+        $this->kernelClass = $kernelClass;
+
+        if (LARAVEL_TASK ) {
+            $server->on('Task', [$this, 'onTask']);
+            $server->on('Finish', [$this, 'onFinish']);
+            $this->taskApp= new \LaravelFly\Task\Application($this->laravelDir);
+            $tasks=[
+                'LaravelFly\Task\Log\LogTask',
+            ];
+            foreach($tasks as $task){
+                $this->taskObjs[]= new $task($this->taskApp);
+            }
+        }else{
+            unset($options['task_worker_num']);
+        }
 
         $server->set($options);
 
@@ -33,6 +50,7 @@ class LaravelFlyServer
 
         return $this;
     }
+
     public function start()
     {
         $this->swoole_http_server->start();
@@ -50,34 +68,42 @@ class LaravelFlyServer
 
     }
 
-    public function onWorkerStart()
+    public function onWorkerStart($server, $worker_id)
     {
+        if ($worker_id >= $server->setting['worker_num']) {
+            echo 'task worker created',"\n";
 
-        if (!LOAD_COMPILED_BEFORE_WORKER) {
-            $this->loadCompiledAndInitSth();
+        } else {
+
+            if (!LOAD_COMPILED_BEFORE_WORKER) {
+                $this->loadCompiledAndInitSth();
+            }
+
+            $this->app = $app = LARAVELFLY_GREEDY ?
+                new \LaravelFly\Greedy\Application($this->laravelDir) :
+                new \LaravelFly\Application($this->laravelDir);
+
+           if( LARAVEL_TASK ) {
+               $app->server= $server;
+           }
+
+            $app->singleton(
+                \Illuminate\Contracts\Http\Kernel::class,
+                LARAVELFLY_KERNEL
+            );
+            $app->singleton(
+                \Illuminate\Contracts\Console\Kernel::class,
+                \App\Console\Kernel::class
+            );
+            $app->singleton(
+                \Illuminate\Contracts\Debug\ExceptionHandler::class,
+                \App\Exceptions\Handler::class
+            );
+
+            $this->kernel = $app->make(\Illuminate\Contracts\Http\Kernel::class);
+
+            $this->bootstrap();
         }
-
-        $this->app = $app = LARAVELFLY_GREEDY ?
-            new \LaravelFly\Greedy\Application($this->laravelDir) :
-            new \LaravelFly\Application($this->laravelDir);
-
-        $app->singleton(
-            \Illuminate\Contracts\Http\Kernel::class,
-            LARAVELFLY_KERNEL
-        );
-        $app->singleton(
-            \Illuminate\Contracts\Console\Kernel::class,
-            \App\Console\Kernel::class
-        );
-        $app->singleton(
-            \Illuminate\Contracts\Debug\ExceptionHandler::class,
-            \App\Exceptions\Handler::class
-        );
-
-        $this->kernel = $app->make(\Illuminate\Contracts\Http\Kernel::class);
-
-        $this->bootstrap();
-
     }
 
     protected function bootstrap()
@@ -200,6 +226,36 @@ class LaravelFlyServer
             $_SERVER[$_key] = $value;
         }
         $_SERVER['REMOTE_ADDR'] = $request->server['remote_addr'];
+    }
+
+    public function onTask($server, $task_id, $from_id, $data)
+    {
+
+        foreach($this->taskObjs as $obj){
+            if($obj->accept($data)){
+               $obj->work($data);
+                return;
+            }
+        }
+        return;
+
+        echo "This Task {$task_id} from Worker {$from_id}\n";
+        var_dump($data);
+        for ($i = 0; $i < 30; $i++) {
+            sleep(1);
+            echo "Taks {$task_id} Handle {$i} times...\n";
+        }
+//        $fd=$data['fd'];
+//        if($server->exist($fd)){
+//            $server->send($fd, "Data in Task {$task_id}");
+//        }
+        return "Task {$task_id}'s result";
+    }
+
+    public function onFinish($server, $task_id, $data)
+    {
+        echo "Task {$task_id} finish\n";
+        echo "Result: {$data}\n";
     }
 
     public static function getInstance($laravelDir, $options)

@@ -3,6 +3,8 @@
 // Normal Mode or Greedy Mode
 const LARAVELFLY_GREEDY = true;
 
+const LARAVEL_TASK = false;
+
 /**
  * When to load 'compiled.php'
  * If true, compiled.php is loaded before any swoole worker. No matter how many workers, there's only one copy in memory. The merit is saving some memory . The demerit is , memory does not update when you restart all workers.
@@ -30,4 +32,7 @@ return [
     'max_request' => 1000,
 
     //'log_file' => '/data/log/swoole.log',
+    
+    'task_worker_num'=>8,
+
 ];

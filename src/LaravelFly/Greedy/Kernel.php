@@ -15,7 +15,8 @@ class Kernel extends \LaravelFly\Kernel
     protected $bootstrappers = [
         'Illuminate\Foundation\Bootstrap\DetectEnvironment',
         'Illuminate\Foundation\Bootstrap\LoadConfiguration',
-        'Illuminate\Foundation\Bootstrap\ConfigureLogging',
+//        'Illuminate\Foundation\Bootstrap\ConfigureLogging',
+        LARAVEL_TASK ? 'LaravelFly\Task\WorkerBootstrap\ConfigureLogging' :'Illuminate\Foundation\Bootstrap\ConfigureLogging',
         'Illuminate\Foundation\Bootstrap\HandleExceptions',
         'Illuminate\Foundation\Bootstrap\RegisterFacades',
 
