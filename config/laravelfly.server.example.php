@@ -3,6 +3,8 @@
 // Normal Mode or Greedy Mode
 const LARAVELFLY_GREEDY = true;
 
+// if use task, you can not use app('event') , for example: you can't use log related event handler,  it's hard for swoole task to implement , Task\WorkerSide\WorkerLog delete all event related code.
+// how to get task failure infonation and do with it? 
 const LARAVEL_TASK = false;
 
 /**
