@@ -9,7 +9,7 @@
 namespace LaravelFly\Task\WorkerBootstrap;
 
 use LaravelFly\Application;
-use LaravelFly\Task\Log\WorkerLog as Log;
+use LaravelFly\Task\WorkerSide\WorkerLog as Log;
 
 class ConfigureLogging
 {

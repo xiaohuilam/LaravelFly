@@ -1,18 +1,12 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: ivy
- * Date: 2015/11/28
- * Time: 0:04
- */
+
 
 namespace LaravelFly\Task\Log;
 
 use Monolog\Logger as Monolog;
-use Illuminate\Log\Writer;
 use Illuminate\Foundation\Application;
 
-class LogTask extends  \Illuminate\Foundation\Bootstrap\ConfigureLogging
+class LogTask extends  \Illuminate\Foundation\Bootstrap\ConfigureLogging implements \LaravelFly\Task\Task
 {
 
     protected $monolog;
@@ -47,6 +41,16 @@ class LogTask extends  \Illuminate\Foundation\Bootstrap\ConfigureLogging
         $log = new Writer( $monolog, null);
 
         return $log;
+    }
+    protected function configureHandlers(Application $app, Writer $log)
+    {
+    	
+    	$log->useMySql($app->make('db')->connection()->getPdo());
+    	return;
+    	
+    	// if use file log, when many Log task, some did not finish, for example:  400 Log:info, only 300 records added to log file
+        $method = 'configure'.ucfirst($app['config']['app.log']).'Handler';
+        $this->{$method}($app, $log);
     }
 
 }

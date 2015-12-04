@@ -1,5 +1,7 @@
 <?php
 
+use Illuminate\Database\Connectors\ConnectionFactory;
+use  Illuminate\Database\DatabaseManager;
 
 class LaravelFlyServer
 {
@@ -31,9 +33,10 @@ class LaravelFlyServer
         if (LARAVEL_TASK ) {
             $server->on('Task', [$this, 'onTask']);
             $server->on('Finish', [$this, 'onFinish']);
+            
             $this->taskApp= new \LaravelFly\Task\Application($this->laravelDir);
             $tasks=[
-                'LaravelFly\Task\Log\LogTask',
+                //'LaravelFly\Task\Log\LogTask', // this task is not allowed here, because it uses db; Swoole Rule: one process, on db connection
             ];
             foreach($tasks as $task){
                 $this->taskObjs[]= new $task($this->taskApp);
@@ -71,7 +74,28 @@ class LaravelFlyServer
     public function onWorkerStart($server, $worker_id)
     {
         if ($worker_id >= $server->setting['worker_num']) {
-            echo 'task worker created',"\n";
+            echo 'task worker start',"\n";
+            
+            $tasksInWorker=[
+            	// this task uses db, so it's necessary to make it in worker;  
+            	// db connection would be created in this task creation, because this task is the first to call $app->make('db')
+                'LaravelFly\Task\Log\LogTask',
+            ];
+            foreach($tasksInWorker as $task){
+                $this->taskObjs[]= new $task($this->taskApp);
+            }
+
+
+                
+
+//		  每个task worker都有一个app
+//            $taskApp= new \LaravelFly\Task\Application($this->laravelDir);
+//            $tasks=[
+//                'LaravelFly\Task\Log\LogTask',
+//            ];
+//            foreach($tasks as $task){
+//                $this->taskObjs[]= new $task($taskApp);
+//            }
 
         } else {
 

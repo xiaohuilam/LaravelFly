@@ -8,6 +8,9 @@
 
 namespace LaravelFly\Task;
 
+use Illuminate\Database\Connectors\ConnectionFactory;
+use  Illuminate\Database\DatabaseManager;
+
 
 class Application extends \Illuminate\Foundation\Application
 {
@@ -23,6 +26,16 @@ class Application extends \Illuminate\Foundation\Application
         (new \Illuminate\Foundation\Bootstrap\DetectEnvironment)->bootstrap($this);
 
         (new \LaravelFly\Task\Bootstrap\LoadConfiguration)->bootstrap($this);
+
+        // ready for db, but db service and db connection has not been created, they should be created in worker
+        // because db connection could not be used across process
+        $this->singleton('db.factory', function ($app) {
+            return new ConnectionFactory($app);
+        });
+        $this->singleton('db', function ($app) {
+            return new DatabaseManager($app, $app['db.factory']);
+        });
+
 
     }
 

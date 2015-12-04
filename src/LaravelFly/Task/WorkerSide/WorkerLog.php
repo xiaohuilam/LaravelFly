@@ -1,6 +1,6 @@
 <?php
 
-namespace LaravelFly\Task\Log;
+namespace LaravelFly\Task\WorkerSide;
 
 use Psr\Log\LoggerInterface as PsrLoggerInterface;
 use Illuminate\Contracts\Logging\Log as LogContract;
@@ -158,9 +158,6 @@ class WorkerLog implements LogContract, PsrLoggerInterface
     protected function writeLog($level, $message, $context)
     {
         $type='log';
-//        if(gettype($message)=='object'){
-//            $message = get_class($message);
-//        }
         $this->server->task(compact('type','level','message','context'));
     }
 
@@ -170,4 +167,6 @@ class WorkerLog implements LogContract, PsrLoggerInterface
     public function useDailyFiles($path, $days = 0, $level = 'debug'){
 
     }
+    function listen()
+    {}
 }
