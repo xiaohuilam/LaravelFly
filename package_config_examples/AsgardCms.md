@@ -1,3 +1,6 @@
+
+AsgardCMS Platform  is a modular multilingual CMS built with Laravel 5. http://asgardcms.com/
+
 ## config/app.php
 add the ServiceProvider to the providers array
 ```
