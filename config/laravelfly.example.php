@@ -81,7 +81,6 @@ return [
         Illuminate\Bus\BusServiceProvider::class,
         Illuminate\Cache\CacheServiceProvider::class,
         Illuminate\Foundation\Providers\ConsoleSupportServiceProvider::class,
-        Illuminate\Routing\ControllerServiceProvider::class,
         Illuminate\Cookie\CookieServiceProvider::class,
         Illuminate\Database\DatabaseServiceProvider::class,
         Illuminate\Encryption\EncryptionServiceProvider::class,
@@ -151,10 +150,6 @@ return [
         /* depends */
         /* It's rare that there console services  are used for your user. */
         // 'command.auth.resets.clear' => [],'migrator' => [],...
-
-
-        /* Illuminate\Routing\ControllerServiceProvider::class :*/
-        'illuminate.route.dispatcher' => [],
 
 
         /* Illuminate\Cookie\CookieServiceProvider::class :*/
